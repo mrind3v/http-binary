@@ -102,6 +102,12 @@ class BcurlTests(ServerCase):
         with open(out, "rb") as f:
             self.assertEqual(f.read(), self.files["big.bin"])
 
+    def test_unwritable_output_file_is_a_clean_error(self):
+        r = run_bcurl("-o", os.path.join(self.tmp.name, "no", "such", "dir"), self.url("/index.html"))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn(b"cannot write", r.stderr)
+        self.assertNotIn(b"Traceback", r.stderr)
+
     def test_default_port_and_scheme_prefix_are_accepted(self):
         r = run_bcurl(f"hbin://127.0.0.1:{self.port}/index.html")
         self.assertEqual(r.stdout, b"<h1>hello</h1>\n")

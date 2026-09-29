@@ -202,13 +202,22 @@ def main(argv, stdout=None, err=None):
         return EXIT_USAGE
 
     host, port, _ = opts["targets"][0]
+    if opts["output"]:
+        try:
+            out = open(opts["output"], "wb")
+        except OSError as exc:
+            print(f"bcurl: cannot write {opts['output']}: {exc}", file=err)
+            return EXIT_USAGE
+    else:
+        out = stdout or sys.stdout.buffer
     try:
         client = Client(host, port, opts["verbose"], err)
     except OSError as exc:
         print(f"bcurl: cannot connect to {host}:{port}: {exc}", file=err)
+        if opts["output"]:
+            out.close()
         return EXIT_NETWORK
 
-    out = open(opts["output"], "wb") if opts["output"] else (stdout or sys.stdout.buffer)
     worst = EXIT_OK
     try:
         for _, _, path in opts["targets"]:
